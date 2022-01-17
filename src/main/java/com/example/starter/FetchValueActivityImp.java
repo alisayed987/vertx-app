@@ -11,31 +11,43 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
 
-public class FetchValueActivityImp implements FetchValueActivity{
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.ext.web.client.WebClient;
 
-  ObjectMapper mapper = new ObjectMapper()
-    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    .configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES,true);
+public class FetchValueActivityImp implements FetchValueActivity{
+//
+//  ObjectMapper mapper = new ObjectMapper()
+//    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+//    .configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES,true);
+
   @Override
-  public float getUSDFromAPI() {
+  public void getUSDFromAPI() {
 
     try {
-      // Http GET request (to get the USD value in EGP)
-      URL url = new URL("https://freecurrencyapi.net/api/v2/latest?apikey=c604bf70-746f-11ec-a4ee-d7b783de69df");
-      HttpURLConnection con = (HttpURLConnection) url.openConnection();
-      con.setRequestMethod("GET");
-      con.setRequestProperty("Accept", "application/json");
-      InputStream responseStream = con.getInputStream();
+      Vertx vertx = Vertx.vertx();
+      WebClient client = WebClient.create(vertx);
+      client.getAbs("https://freecurrencyapi.net/api/v2/latest?apikey=c604bf70-746f-11ec-a4ee-d7b783de69df")
+        .send().onSuccess(response ->{
+          JacksonParser res = response.bodyAsJson(JacksonParser.class);
+        System.out.println(res.getData().get("EGP"));
+          JsonNode currency_values = res.getData();
+          float EGP = Float.parseFloat(currency_values.get("EGP").toString());
+          // Start ConverterWorker
+          ConverterWorker cw = new ConverterWorker();
+          cw.startWorker();
 
-      // Mapping response to Json
-      JacksonParser jsonMap = mapper.readValue(responseStream,JacksonParser.class);
-      JsonNode currency_values = jsonMap.getData();
+          // Deploy ConverterVerticle
+          vertx.deployVerticle(new ConvertVerticle());
+          vertx.eventBus().request("recieve.address",EGP,handler->{
+            System.out.println(handler.result().body());  //Final result (EGP * USD)
+          });
+        });
 
-      Float EGP = Float.parseFloat( currency_values.get("EGP").toString() ) ;
-      return (EGP);
     } catch (Exception e) {
+      System.out.println("***********************");
       e.printStackTrace();
-      return 0;
+
     }
 
   }

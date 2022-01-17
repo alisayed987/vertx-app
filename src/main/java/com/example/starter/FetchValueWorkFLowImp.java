@@ -7,8 +7,8 @@ public class FetchValueWorkFLowImp implements FetchValueWorkFlow{
   FetchValueActivity fva = new FetchValueActivityImp();
 
   @Override
-  public float fetchValue() {
-    float EGP = fva.getUSDFromAPI();
-    return EGP;
+  public void fetchValue() {
+    fva.getUSDFromAPI();
+
   }
 }

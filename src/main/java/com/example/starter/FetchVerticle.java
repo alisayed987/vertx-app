@@ -18,16 +18,8 @@ public class FetchVerticle extends AbstractVerticle {
       .setTaskQueue("fetch_queue")
       .build();
     FetchValueWorkFlow wf = client.newWorkflowStub(FetchValueWorkFlow.class, options);
-    float EGP = wf.fetchValue();
+    wf.fetchValue();
 
-    // Start ConverterWorker
-    ConverterWorker cw = new ConverterWorker();
-    cw.startWorker();
 
-    // Deploy ConverterVerticle
-    vertx.deployVerticle(new ConvertVerticle());
-    vertx.eventBus().request("recieve.address",EGP,handler->{
-      System.out.println(handler.result().body());  //Final result (EGP * USD)
-    });
   }
 }
