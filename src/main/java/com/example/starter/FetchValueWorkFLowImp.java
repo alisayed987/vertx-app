@@ -14,7 +14,7 @@ public class FetchValueWorkFLowImp implements FetchValueWorkFlow{
 
   ActivityOptions options1 = ActivityOptions.newBuilder()
     .setTaskQueue("fetch_queue")
-    .setStartToCloseTimeout(Duration.ofSeconds(25))
+    .setStartToCloseTimeout(Duration.ofSeconds(5))
     .build();
 
 
