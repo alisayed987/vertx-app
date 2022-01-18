@@ -1,5 +1,6 @@
 package com.example.starter;
 
+import io.temporal.client.ActivityCompletionClient;
 import io.temporal.client.WorkflowClient;
 import io.temporal.serviceclient.WorkflowServiceStubs;
 import io.temporal.worker.Worker;
@@ -12,7 +13,8 @@ public class FetcherWorker {
     WorkerFactory factory = WorkerFactory.newInstance(client);
     Worker worker = factory.newWorker("fetch_queue");
     worker.registerWorkflowImplementationTypes(FetchValueWorkFLowImp.class);
-    worker.registerActivitiesImplementations(new CalcResultActivityImp());
+    ActivityCompletionClient compClient = client.newActivityCompletionClient();
+    worker.registerActivitiesImplementations(new FetchValueActivityImp(compClient));
     factory.start();
   }
 }

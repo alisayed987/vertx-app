@@ -7,5 +7,5 @@ import io.vertx.core.Vertx;
 @ActivityInterface
 public interface FetchValueActivity {
   @ActivityMethod
-  void getUSDFromAPI();
+  float getUSDFromAPI();
 }

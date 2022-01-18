@@ -11,6 +11,12 @@ public class MainVerticle extends AbstractVerticle {
     // Start FetchWorkFlow
     FetcherWorker fw = new FetcherWorker();
     fw.startWorker();
+    // Start ConverterWorker
+    ConverterWorker cw = new ConverterWorker();
+    cw.startWorker();
+
+    // Deploy ConverterVerticle
+    vertx.deployVerticle(new ConvertVerticle());
 
     //deploy FetchVerticle
     vertx.deployVerticle(new FetchVerticle());

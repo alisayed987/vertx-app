@@ -11,44 +11,56 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
 
+import io.temporal.activity.Activity;
+import io.temporal.activity.ActivityExecutionContext;
+import io.temporal.client.ActivityCompletionClient;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.WebClient;
 
 public class FetchValueActivityImp implements FetchValueActivity{
-//
-//  ObjectMapper mapper = new ObjectMapper()
-//    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-//    .configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES,true);
-
+  private final ActivityCompletionClient completionClient;
+  FetchValueActivityImp(ActivityCompletionClient completionClient){
+    this.completionClient=completionClient;
+  }
   @Override
-  public void getUSDFromAPI() {
+  public float getUSDFromAPI() {
+    System.out.println("Fectch ACtiviy");
 
+    ActivityExecutionContext ctx = Activity.getExecutionContext();
+    byte[] taskToken = ctx.getInfo().getTaskToken();
     try {
+      System.out.println("trying");
       Vertx vertx = Vertx.vertx();
       WebClient client = WebClient.create(vertx);
       client.getAbs("https://freecurrencyapi.net/api/v2/latest?apikey=c604bf70-746f-11ec-a4ee-d7b783de69df")
         .send().onSuccess(response ->{
           JacksonParser res = response.bodyAsJson(JacksonParser.class);
-        System.out.println(res.getData().get("EGP"));
-          JsonNode currency_values = res.getData();
-          float EGP = Float.parseFloat(currency_values.get("EGP").toString());
-          // Start ConverterWorker
-          ConverterWorker cw = new ConverterWorker();
-          cw.startWorker();
+        System.out.println(res.getData().EGP);
+          float EGP = Float.parseFloat(res.getData().EGP);
+          completeActivity(taskToken,EGP);
+        }).onFailure(r->{
+          System.out.println("Failed");
 
-          // Deploy ConverterVerticle
-          vertx.deployVerticle(new ConvertVerticle());
-          vertx.eventBus().request("recieve.address",EGP,handler->{
-            System.out.println(handler.result().body());  //Final result (EGP * USD)
-          });
+          failActivity(taskToken,new Exception(r));
         });
-
+      ctx.doNotCompleteOnReturn();
+      return (float) 0;
     } catch (Exception e) {
       System.out.println("***********************");
       e.printStackTrace();
+      failActivity(taskToken,new Exception(e));
+      return (float) 0;
+
 
     }
 
+  }
+  public <R> void completeActivity(byte[] taskToken, R result) {
+    completionClient.complete(taskToken, result);
+  }
+
+  public void failActivity(byte[] taskToken, Exception failure) {
+    completionClient.completeExceptionally(taskToken, failure);
   }
 }

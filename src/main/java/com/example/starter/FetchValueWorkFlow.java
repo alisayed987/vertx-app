@@ -6,5 +6,5 @@ import io.temporal.workflow.WorkflowMethod;
 @WorkflowInterface
 public interface FetchValueWorkFlow {
   @WorkflowMethod
-  void fetchValue();
+  float fetchValue();
 }
