@@ -4,17 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public class JacksonParser {
    JsonNode query;
-   JsonNode data;
+   JacksonData data;
 
-  public void setData(JsonNode data) {
-    this.data = data;
-  }
 
-  public void setQuery(JsonNode query) {
-    this.query = query;
-  }
-
-  public JsonNode getData() {
+  public JacksonData getData() {
     return data;
   }
 
